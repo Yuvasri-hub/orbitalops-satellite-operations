@@ -133,13 +133,31 @@ export const connectDB = async (customUrl) => {
     process.env.DATABASE_URL ||
     `postgresql://${process.env.PGUSER || 'spaceops'}:${process.env.PGPASSWORD || 'spaceops_secure_password_2026'}@${process.env.PGHOST || '127.0.0.1'}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE || 'space_mission_ops'}`;
 
+  const isLocal =
+    connectionString.includes('localhost') ||
+    connectionString.includes('127.0.0.1') ||
+    connectionString.includes('@postgres:');
+
+  const poolConfig = {
+    connectionString,
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 10000,
+    max: 20,
+  };
+
+  // Configure SSL for managed cloud databases (such as Render PostgreSQL)
+  if (
+    !isLocal &&
+    (process.env.NODE_ENV === 'production' ||
+      connectionString.includes('render.com') ||
+      process.env.PGSSL === 'true' ||
+      connectionString.includes('sslmode=require'))
+  ) {
+    poolConfig.ssl = { rejectUnauthorized: false };
+  }
+
   try {
-    const newPool = new Pool({
-      connectionString,
-      connectionTimeoutMillis: 3500,
-      idleTimeoutMillis: 10000,
-      max: 20,
-    });
+    const newPool = new Pool(poolConfig);
 
     // Test connection
     const client = await newPool.connect();

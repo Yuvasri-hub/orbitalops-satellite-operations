@@ -13,18 +13,24 @@ export const connectRedis = () => {
     process.env.REDIS_URL ||
     `redis://${process.env.REDIS_HOST || '127.0.0.1'}:${process.env.REDIS_PORT || 6379}`;
 
+  const redisOptions = {
+    lazyConnect: true,
+    maxRetriesPerRequest: 2,
+    connectTimeout: 5000,
+    retryStrategy: (times) => {
+      if (times > 5) {
+        return null; // Stop reconnecting after retries in offline dev
+      }
+      return Math.min(times * 1000, 3000);
+    },
+  };
+
+  if (redisUrl.startsWith('rediss://')) {
+    redisOptions.tls = { rejectUnauthorized: false };
+  }
+
   try {
-    redisClient = new Redis(redisUrl, {
-      lazyConnect: true,
-      maxRetriesPerRequest: 1,
-      connectTimeout: 3000,
-      retryStrategy: (times) => {
-        if (times > 3) {
-          return null; // Stop reconnecting after 3 retries in dev/offline
-        }
-        return Math.min(times * 1000, 3000);
-      },
-    });
+    redisClient = new Redis(redisUrl, redisOptions);
 
     redisClient.on('connect', () => {
       isConnected = true;

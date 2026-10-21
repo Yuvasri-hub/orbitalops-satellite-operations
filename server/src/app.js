@@ -20,10 +20,26 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// Middleware - Enhanced CORS supporting local Docker, local dev, and Render domains
+const clientUrlEnv = process.env.CLIENT_URL;
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || '*',
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (!clientUrlEnv || clientUrlEnv === '*') {
+        return callback(null, true);
+      }
+      const allowedList = clientUrlEnv.split(',').map((u) => u.trim());
+      if (
+        allowedList.includes(origin) ||
+        origin.endsWith('.onrender.com') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1')
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
   })
 );

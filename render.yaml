@@ -1,0 +1,76 @@
+# Render Blueprint Specification
+# Space Mission Operations & Satellite Management System
+# Architecture: React + TypeScript (Static Site), Node.js + Express (Web Service), Managed PostgreSQL, Managed Redis (Key Value)
+
+databases:
+  # Managed PostgreSQL 16 Database
+  - name: space-ops-postgres
+    databaseName: space_mission_ops
+    user: spaceops
+    plan: free
+    region: oregon
+
+services:
+  # 1. Managed Redis-compatible Key Value Store
+  - type: keyvalue
+    name: space-ops-redis
+    plan: free
+    region: oregon
+    ipAllowList: [] # Restrict access exclusively to internal Render services
+
+  # 2. Express.js REST API Backend
+  - type: web
+    name: space-ops-backend
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: space-ops-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: space-ops-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true # Generates a secure random 256-bit secret without storing it in git
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: AUTO_SEED
+        value: "true"
+      - key: CLIENT_URL
+        value: "*" # Backend CORS dynamically permits *.onrender.com and requesting origins
+
+  # 3. React + TypeScript Frontend SPA (Global CDN Static Site)
+  - type: web
+    name: space-ops-frontend
+    runtime: static
+    plan: free
+    region: oregon
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+    envVars:
+      - key: VITE_API_URL
+        value: https://space-ops-backend.onrender.com

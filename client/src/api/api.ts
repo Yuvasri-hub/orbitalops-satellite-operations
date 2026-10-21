@@ -11,7 +11,14 @@ import {
   ApiResponse,
 } from '../types';
 
-const BASE_URL = '/api';
+const resolveApiBase = (): string => {
+  const envUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+  if (!envUrl) return '/api';
+  const clean = envUrl.replace(/\/+$/, '');
+  return clean.endsWith('/api') ? clean : `${clean}/api`;
+};
+
+const BASE_URL = resolveApiBase();
 
 export const getStoredToken = (): string | null => localStorage.getItem('space_ops_token');
 export const setStoredToken = (token: string): void => localStorage.setItem('space_ops_token', token);

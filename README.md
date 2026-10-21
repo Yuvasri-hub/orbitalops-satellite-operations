@@ -182,10 +182,59 @@ node server/src/scripts/verify-e2e.js
 
 ---
 
+## 🚀 Deployment on Render (Render Blueprint)
+
+The repository includes a ready-to-use Render Blueprint specification ([`render.yaml`](file:///c:/Users/yuvas/OneDrive/Desktop/FSD%20SATELLITE/render.yaml)) that automatically configures and orchestrates all 4 architectural components:
+1. **Frontend**: Global CDN Static Site (`space-ops-frontend`) with SPA client-side routing.
+2. **Backend**: Express.js REST API Web Service (`space-ops-backend`) with health checks.
+3. **Database**: Managed PostgreSQL 16 instance (`space-ops-postgres`) with automated schema initialization.
+4. **Cache**: Managed Redis-compatible Key Value store (`space-ops-redis`) with internal networking.
+
+### One-Click Blueprint Deployment Steps:
+
+1. **Push your code to GitHub**:
+   Ensure your latest code is on GitHub (e.g., `https://github.com/Yuvasri-hub/orbitalops-satellite-operations`).
+
+2. **Open Render Dashboard**:
+   - Navigate to [https://dashboard.render.com](https://dashboard.render.com).
+   - Click **New +** and select **Blueprint**.
+
+3. **Connect Repository**:
+   - Select your `orbitalops-satellite-operations` repository.
+   - Render will parse `render.yaml` and display the planned resources:
+     - `space-ops-postgres` (Managed Database)
+     - `space-ops-redis` (Key Value Store)
+     - `space-ops-backend` (Node Web Service)
+     - `space-ops-frontend` (Static Site)
+
+4. **Verify & Apply**:
+   - Click **Apply**.
+   - Render provisions the database and Redis store first, then builds and starts the backend service, and finally compiles and serves the React + TypeScript frontend on the global CDN.
+
+### Environment Variables & Secrets Management:
+
+All secrets and connection strings are managed securely without committing any credentials to Git:
+
+| Service | Variable | Value / Configuration | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Backend** | `DATABASE_URL` | Wired via `fromDatabase: space-ops-postgres` | PostgreSQL connection pool |
+| **Backend** | `REDIS_URL` | Wired via `fromService: space-ops-redis` | Telemetry & alerts caching |
+| **Backend** | `JWT_SECRET` | Auto-generated via `generateValue: true` | Cryptographic secret for signing JWTs |
+| **Backend** | `JWT_EXPIRE` | `7d` | Token validity duration |
+| **Backend** | `AUTO_SEED` | `true` | Automatically provisions demo constellation & users |
+| **Backend** | `CLIENT_URL` | `*` or `https://space-ops-frontend.onrender.com` | Allowed CORS origins |
+| **Frontend** | `VITE_API_URL` | `https://space-ops-backend.onrender.com` | Backend REST API endpoint for the browser |
+
+> [!NOTE]
+> If Render assigns a custom subdomain to your backend (e.g. `https://space-ops-backend-xyz.onrender.com`), set `VITE_API_URL` on the `space-ops-frontend` static site settings in Render to match that URL and trigger a re-deploy.
+
+---
+
 ## 📂 Project Structure
 
 ```
 FSD SATELLITE/
+├── render.yaml                 # Render Infrastructure-as-Code Blueprint (Frontend, Backend, Postgres, Redis)
 ├── docker-compose.yml          # Multi-container orchestration (Client, Server, Postgres, Redis)
 ├── .env.example                # Root environment template
 ├── .gitignore                  # Gitignore excluding node_modules, dist, and .env
@@ -210,12 +259,13 @@ FSD SATELLITE/
 │   │   ├── middleware/         # JWT Auth, Role RBAC, error handlers
 │   │   ├── routes/             # RESTful API endpoints
 │   │   ├── utils/              # Ground station conflict checker & telemetry simulator
-│   │   └── scripts/            # PostgreSQL seed script and E2E verification
+│   │   └── scripts/            # PostgreSQL seed script, E2E verification, Redis test, full-system test
 │   └── tests/                  # Vitest test files
 └── client/                     # React + TypeScript + Vite frontend
     ├── Dockerfile              # Multi-stage build with Nginx Alpine web server
     ├── nginx.conf              # Nginx reverse proxy configuration (/api -> backend)
     ├── .dockerignore
+    ├── .env.example            # Client environment template (VITE_API_URL)
     ├── package.json
     ├── tsconfig.json           # TypeScript project configuration
     ├── tsconfig.node.json
@@ -224,8 +274,9 @@ FSD SATELLITE/
     └── src/
         ├── main.tsx            # React root with AuthProvider
         ├── App.tsx             # Module router and telemetry disclaimer banner
+        ├── vite-env.d.ts       # Vite client and ImportMetaEnv type definitions
         ├── types/              # Full TypeScript model interfaces and API types
-        ├── api/                # Typed REST API client
+        ├── api/                # Typed REST API client with dynamic VITE_API_URL resolution
         ├── context/            # AuthContext & typed session hooks
         ├── styles/             # Aerospace dark mode design system
         ├── components/         # Navbar, AuthModal, ToastContainer
@@ -237,12 +288,14 @@ FSD SATELLITE/
 ## 📜 Compliance Checklist
 
 - [x] **React**: Modern component architecture, state management, modular design.
-- [x] **TypeScript**: Full static typing across client (`types/`, `api/`, `components/`, `views/`, `context/`).
+- [x] **TypeScript**: Full static typing across client (`types/`, `api/`, `components/`, `views/`, `context/`, `vite-env.d.ts`).
 - [x] **Node.js**: Non-blocking runtime powering the mission operations server.
 - [x] **Express.js**: RESTful API endpoints with JWT authentication and RBAC authorization middleware.
 - [x] **PostgreSQL**: Relational storage with foreign key constraints, indexes, and automated schema migration.
 - [x] **Redis**: In-memory caching for latest spacecraft telemetry and mission control alerts with automatic invalidation.
 - [x] **REST API**: Clean JSON API specification with status codes (200, 201, 400, 401, 403, 404, 409 Conflict).
 - [x] **Docker**: Dockerfiles (`client`, `server`) and `docker-compose.yml` orchestrating client, server, PostgreSQL 16, and Redis 7.
+- [x] **Render Cloud Deployment**: Production-ready `render.yaml` Blueprint orchestrating Managed PostgreSQL, Managed Redis (Key Value), Node.js backend, and React static frontend.
 - [x] **Git / GitHub**: Clean repository structure with `.gitignore` and zero hardcoded secrets.
 - [x] **Relational Persistence & Fast Caching**: 100% migrated to PostgreSQL + Redis with zero legacy document store dependencies across all source code, models, tests, and documentation.
+
