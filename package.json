@@ -1,0 +1,43 @@
+{
+  "name": "space-mission-operations-system",
+  "version": "1.0.0",
+  "description": "Space Mission Operations & Satellite Management System (React, TypeScript, Node.js, Express.js, PostgreSQL, Redis, REST API, Docker)",
+  "main": "server/src/server.js",
+  "scripts": {
+    "install:server": "npm --prefix server install",
+    "install:client": "npm --prefix client install",
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run dev:server\" \"npm run dev:client\"",
+    "start:server": "npm --prefix server start",
+    "start:client": "npm --prefix client run preview",
+    "seed": "npm --prefix server run seed",
+    "test": "npm --prefix server test",
+    "verify:e2e": "node server/src/scripts/verify-e2e.js",
+    "verify:redis": "node server/src/scripts/verify-redis.js",
+    "verify:full": "node server/src/scripts/verify-full-system.js",
+    "build:client": "npm --prefix client run build",
+    "build": "npm run build:client",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "react",
+    "typescript",
+    "nodejs",
+    "express",
+    "postgresql",
+    "redis",
+    "satellite",
+    "mission-operations",
+    "ground-stations",
+    "telemetry",
+    "docker"
+  ],
+  "author": "Space Mission Operations Team",
+  "license": "MIT"
+}

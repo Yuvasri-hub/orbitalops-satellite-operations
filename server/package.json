@@ -1,0 +1,27 @@
+{
+  "name": "space-mission-ops-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend REST API for Space Mission Operations & Satellite Management System (Express.js, PostgreSQL, Redis)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/scripts/seed.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ioredis": "^5.4.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.4",
+    "supertest": "^7.0.0",
+    "vitest": "^3.0.7"
+  }
+}
