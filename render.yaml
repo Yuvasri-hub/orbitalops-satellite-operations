@@ -55,8 +55,6 @@ services:
   - type: web
     name: space-ops-frontend
     runtime: static
-    plan: free
-    region: oregon
     rootDir: client
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
